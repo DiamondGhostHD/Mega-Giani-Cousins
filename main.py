@@ -1,7 +1,7 @@
 import pygame
-
+from pygame.locals import *
 pygame.init()
-pygame.font.init()
+
 
 
 # display resolution
@@ -12,15 +12,14 @@ edge_bottom = 900
 screen = pygame.display.set_mode((edge_right, edge_bottom))
 
 
-# display color
-color_display = (140, 217, 7)
-screen.fill(color_display)
+# backround image	
+bg_img = pygame.image.load('C:\School\Meditatii\Info')
+bg_img = pygame.transform.scale(bg_img,(edge_right,edge_bottom))
 
 
 running = True
 while running:
 
-    screen.fill(color_display)  # erease what's been before
 
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
