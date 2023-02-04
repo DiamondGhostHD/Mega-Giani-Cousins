@@ -24,22 +24,34 @@ big_giani = pygame.image.load('./giani.png')                                    
 big_giani_size = big_giani.get_size()                                                  #? get the size of the original image
 giani = pygame.transform.scale(big_giani, (big_giani_size[0]/8, big_giani_size[1]/8))  #? resize the image because it was too big
 pos_x = 50
-pos_y = 600
+pos_y = 630
 
 #gamplay
 gravity = 1
- 
+move_right = False
+move_left = False
 
 runing = True
 while runing:
 
-    #infinite display
+    #move right
+    if move_right:
+        i -= 1
     screen.blit(bg_img, (i,0))
     screen.blit(bg_img, (edge_right + i, 0))
     if (i == -edge_right):
         screen.blit(bg_img, (edge_right + i, 0))
         i = 0
-    i -= 1
+
+    #!move left
+    if move_left:
+        i += 1
+    screen.blit(bg_img, (i,0))
+    screen.blit(bg_img, (edge_right + i, 0))
+    if (i == edge_left):
+        screen.blit(bg_img, (0, 0))
+        i = 0
+    
 
     #show Giani on screen
     screen.blit(giani, (pos_x, pos_y))
@@ -48,8 +60,24 @@ while runing:
 
         #movement
         if event.type == pygame.KEYDOWN:
+
             if event.key == pygame.K_UP:
                 change_to = "up"
+
+            if event.key == pygame.K_RIGHT:
+                move_right = True
+
+            if event.key == pygame.K_LEFT:
+                move_left = True
+
+        if event.type == pygame.KEYUP:
+
+            if event.key == pygame.K_RIGHT:
+                move_right = False
+
+            if event.key == pygame.K_LEFT:
+                move_left = False
+        
 
         #close the game
         if event.type == QUIT:
