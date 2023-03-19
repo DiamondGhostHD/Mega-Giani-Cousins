@@ -3,17 +3,6 @@ import random
 from pygame.locals import *
 pygame.init()
 
-<<<<<<< Updated upstream
-#!Test
-
-# constante cu CAPS
-RIGHT = "right"
-LEFT = "left"
-UP = "up"
-STILL = "still"
-
-=======
->>>>>>> Stashed changes
 # display resolution
 EDGE_LEFT = 0
 EDGE_RIGHT = 1600
