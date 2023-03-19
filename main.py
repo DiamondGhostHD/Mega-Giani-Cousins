@@ -3,6 +3,7 @@ import random
 from pygame.locals import *
 pygame.init()
 
+#!Test
 
 # constante cu CAPS
 RIGHT = "right"
