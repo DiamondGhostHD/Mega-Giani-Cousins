@@ -3,6 +3,7 @@ import random
 from pygame.locals import *
 pygame.init()
 
+<<<<<<< Updated upstream
 #!Test
 
 # constante cu CAPS
@@ -11,6 +12,8 @@ LEFT = "left"
 UP = "up"
 STILL = "still"
 
+=======
+>>>>>>> Stashed changes
 # display resolution
 EDGE_LEFT = 0
 EDGE_RIGHT = 1600
@@ -35,7 +38,6 @@ initial_pos_y = 630
 # initial settings
 gravity = 1  #! random value (for now)
 WORLD_FLOOR = 640  #! random value
-change_to = STILL 
 running = True
 bg_offset = 0
 MAX_BRICK_HIGHT = 300  #! random value
@@ -55,7 +57,6 @@ class Player(pygame.sprite.Sprite):
         original_player_size = original_player.get_size()                                                         #? get the size of the original image
         player_image = pygame.transform.scale(original_player, (original_player_size[0]/8, original_player_size[1]/8))  #? resize the image because it was too big
         player_size = player_image.get_size()
-
         self.image = player_image
         self.rect = self.image.get_rect()
         self.player_size = player_size
@@ -72,6 +73,11 @@ class Player(pygame.sprite.Sprite):
        
     def update(self):
         self.rect.x = self.rect.x + self.move_x
+
+    def gravity(self):
+        self.move_y += gravity #? how fast the pl"
+        if(self.rect.y > WORLD_FLOOR and self.move_y >= 0):
+            self.move_y = 0
 
 #generate player
 player = Player(initial_pos_x, initial_pos_y, DIRECTION_RIGHT)
