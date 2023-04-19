@@ -13,6 +13,9 @@ screen = pygame.display.set_mode((EDGE_RIGHT, EDGE_BOTTOM))
 # game name
 pygame.display.set_caption('Mega Giani Cousins')
 
+# game speed
+fps = pygame.time.Clock()
+player_speed = 200
 
 # background image	
 bg_img = pygame.image.load('./bg.jpeg')
@@ -25,19 +28,18 @@ initial_pos_y = 630
 
 
 # initial settings
-gravity = 1  #! random value (for now)
-WORLD_FLOOR = 640  #! random value
+GRAVITY = 0.5 
+WORLD_FLOOR = 630  
 running = True
 bg_offset = 0
-MAX_BRICK_HIGHT = 300  #! random value
-MIN_BRICK_HIGHT = 600  #! random value
 DIRECTION_RIGHT = "right"
 DIRECTION_LEFT = "left"
 STEPS = 2
 change_direction = DIRECTION_RIGHT
 WALK_LIMIT_RIGHT = 1400
 WALK_LIMIT_LEFT = 50
-bg_move = "False"
+bg_move = False
+INITIAL_JUMP_SPEED = -20
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y, direction):
@@ -52,46 +54,43 @@ class Player(pygame.sprite.Sprite):
         self.rect.x = pos_x  
         self.rect.y = pos_y
         self.direction = direction
-        self.move_x=0
+        self.move_x = 0
+        self.move_y = 0
+        self.is_jumping = False
+        self.is_falling = False
+        self.to_jump = 0
 
     def flip(self):
         self.image = pygame.transform.flip(self.image, True, False)
 
     def control(self, steps):
         self.move_x = steps
-       
+
+    def jumping(self):
+        if(self.is_jumping):
+            if(self.is_falling == False and self.move_y == 0):
+                self.move_y = INITIAL_JUMP_SPEED
+            elif((self.move_y + GRAVITY) == 0):
+                self.move_y += GRAVITY
+                self.is_falling = True
+                self.is_jumping = False
+            elif(self.is_falling == False and self.move_y != 0):
+                self.move_y += GRAVITY
+
+        if(self.is_falling):
+            if(self.rect.y + (self.move_y + GRAVITY) > WORLD_FLOOR):
+                self.move_y = 0
+                self.rect.y = WORLD_FLOOR
+                self.is_falling = False
+            else:
+                self.move_y += GRAVITY
+      
     def update(self):
         self.rect.x = self.rect.x + self.move_x
-
-    def gravity(self):
-        self.move_y += gravity #? how fast the pl"
-        if(self.rect.y > WORLD_FLOOR and self.move_y >= 0):
-            self.move_y = 0
+        self.rect.y = self.rect.y + self.move_y
 
 #generate player
 player = Player(initial_pos_x, initial_pos_y, DIRECTION_RIGHT)
-
-
-class Brick(pygame.sprite.Sprite):
-    def __init__(self, brick_pos_x, brick_pos_y):
-        pygame.sprite.Sprite.__init__(self)
-        original_brick = pygame.image.load('./brick.png')
-        original_brick_size = original_brick.get_size()
-        brick = pygame.transform.scale(original_brick, (original_brick_size[0]*4, original_brick_size[1]*4))
-        brick_size = brick.get_size()
-        self.image = brick
-        self.rect = self.image.get_rect()
-        self.brick_size = brick_size
-        self.brick_pos_x = brick_pos_x
-        self.brick_pos_y = brick_pos_y
-
-#generate draw bricks on screen
-brick_group = pygame.sprite.Group()
-if('condition happens'): #! find a condition
-    new_brick = Brick(random.randrange(EDGE_LEFT, EDGE_RIGHT) ,random.randrange(MAX_BRICK_HIGHT, MIN_BRICK_HIGHT))
-    brick_group.add(new_brick)
-brick_group.draw(screen)
-
 
 while running:
 
@@ -99,7 +98,7 @@ while running:
         # movement
         if event.type == pygame.KEYDOWN:
             if event.key == pygame .K_UP:
-                change_to = UP
+                player.is_jumping = True
 
             if event.key == pygame.K_RIGHT:
                 change_direction = DIRECTION_RIGHT
@@ -114,11 +113,11 @@ while running:
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_RIGHT:
                 player.control(0)
-                bg_move = "False"
+                bg_move = False
 
             if event.key == pygame.K_LEFT:
                 player.control(0)
-                bg_move = "False"
+                bg_move = False
 
         #close the game
         if event.type == QUIT:
@@ -127,7 +126,7 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 running = False
-    
+
 
     if((player.rect.x > WALK_LIMIT_RIGHT) and (bg_move == "Right")): 
         bg_offset -= 1.5
@@ -152,11 +151,16 @@ while running:
         player.direction = change_direction
         player.flip()
     
+    player.jumping()
+
     player.update()
 
     screen.blit(player.image, (player.rect.x, player.rect.y))
-
+    
+    # !screen.blit(brick.image,(brick.rect.x, brick.rect.y))
+    
     pygame.display.update()
+    fps.tick(player_speed)
     
 
 pygame.quit()
