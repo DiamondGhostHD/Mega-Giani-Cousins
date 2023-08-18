@@ -22,21 +22,20 @@ bg_img = pygame.image.load('./bg.jpeg')
 bg_img = pygame.transform.scale(bg_img,(EDGE_RIGHT,EDGE_BOTTOM))
 
 
-# This is a list of 'sprites.' Each block in the program is added to this list.
+# sprite gorups
 block_list = pygame.sprite.Group()
-
-# This is a list of every sprite.
-all_sprites_list = pygame.sprite.Group()  #? All blocks and the player block as well.
+money_list = pygame.sprite.Group()
+all_sprites_list = pygame.sprite.Group()
 
 
 # initial_pos
 initial_pos_x = 50  
-initial_pos_y = 660   
+initial_pos_y = 693   
 
 
 # initial settings
-GRAVITY = 0.25
-WORLD_FLOOR = 660 
+GRAVITY = 0.20
+WORLD_FLOOR = 693 
 running = True
 bg_offset = 0
 DIRECTION_RIGHT = "right"
@@ -44,15 +43,10 @@ DIRECTION_LEFT = "left"
 STEPS = 2
 change_direction = DIRECTION_RIGHT
 WALK_LIMIT_RIGHT = 1400
-WALK_LIMIT_LEFT = 50
 bg_move = False
-INITIAL_JUMP_SPEED = -12
+INITIAL_JUMP_SPEED = -15
 TOP_PLATFORM_HEIGHT = 250
-BOTTOM_PLATFORM_HEIGHT = 550
-PLATFORM_SPACE = 70
-BLOCK = "block"
-SHORT_PLATFROM = "short_platform"
-LONG_PLATFORM = "long_platform"
+BOTTOM_PLATFORM_HEIGHT = 600
 
 
 class Player(pygame.sprite.Sprite):
@@ -146,8 +140,6 @@ class Short_platform(pygame.sprite.Sprite):
             self.kill()
 
 
-
-
 class Long_platform(pygame.sprite.Sprite):
     def __init__(self, long_platform_pos_x, long_platform_pos_y):
         pygame.sprite.Sprite.__init__(self)
@@ -163,17 +155,33 @@ class Long_platform(pygame.sprite.Sprite):
         self.rect.x = long_platform_pos_x
         self.rect.y = long_platform_pos_y
 
-# print(EDGE_RIGHT//5)
-# l = random.choice(('test1', 'test2', 'test3'))
-# short_platform = Short_platform(300, 300)
-# print(short_platform.rect.right - short_platform.rect.left)
+class Money(pygame.sprite.Sprite):
+    def __init__(self, money_pos_x, money_pos_y):
+        pygame.sprite.Sprite.__init__(self)
+        original_money = pygame.image.load('./money.png')
+        original_money_size = original_money.get_size()
+        money = pygame.transform.scale(original_money, (original_money_size[0]*2, original_money_size[1]*2))
+        
+        self.image = money
+        self.rect = self.image.get_rect()
+        self.rect.x = money_pos_x
+        self.rect.y = money_pos_y
 
-for segment in range(5):
-        short_platform = Short_platform(random.randrange(EDGE_RIGHT + EDGE_RIGHT//5*segment + 10, EDGE_RIGHT + EDGE_RIGHT // 5 * (segment + 1) - 10), TOP_PLATFORM_HEIGHT)
+    def update(self):
+        self.rect.x -= 2
+        if(self.rect.right < EDGE_LEFT):
+            self.kill()
+
+
+
+for segment in range(4):
+        short_platform = Short_platform(random.randrange(EDGE_RIGHT + EDGE_RIGHT / 4 * segment + 100, EDGE_RIGHT + EDGE_RIGHT / 4 * (segment + 1) - 100), random.randrange(TOP_PLATFORM_HEIGHT, BOTTOM_PLATFORM_HEIGHT))
         block_list.add(short_platform)
+        if(random.randrange(3) == 1):
+            money = Money(random.randrange(short_platform.rect.left + 20, short_platform.rect.right - 20), short_platform.rect.top - 50)
+            money_list.add(money)
 
-# last_sprite = block_list.sprites()[-1]
-# print(last_sprite.rect.right)
+
 
 while running:
     for event in pygame.event.get():
@@ -209,8 +217,16 @@ while running:
             if event.key == pygame.K_ESCAPE:
                 running = False
 
-    if(player.rect.x < WALK_LIMIT_LEFT and (bg_move == DIRECTION_LEFT)):
-        bg_offset += 1.5
+
+    if((player.rect.x > WALK_LIMIT_RIGHT) and (bg_move == DIRECTION_RIGHT)): 
+        bg_offset -= 2
+        player.control(0)
+        for block in block_list:
+            block.update()
+        for money in money_list:
+            money.update()
+
+    if((player.rect.left <= EDGE_LEFT) and (player.direction == DIRECTION_LEFT)):
         player.control(0)
 
     screen.blit(bg_img, (bg_offset, 0))
@@ -232,26 +248,53 @@ while running:
     last_sprite = block_list.sprites()[-1]
     if(last_sprite.rect.right < 1400):
 
-        for segment in range(5):
-            short_platform = Short_platform(random.randrange(EDGE_RIGHT + EDGE_RIGHT//5*segment + 10, EDGE_RIGHT + EDGE_RIGHT // 5 * (segment + 1) - 10), TOP_PLATFORM_HEIGHT)
+        for segment in range(4):
+            short_platform = Short_platform(random.randrange(EDGE_RIGHT + EDGE_RIGHT / 4* segment + 100, EDGE_RIGHT + EDGE_RIGHT / 4 * (segment + 1) - 100), random.randrange(TOP_PLATFORM_HEIGHT, BOTTOM_PLATFORM_HEIGHT))
             block_list.add(short_platform)
+            if(random.randrange(3) == 1):
+                money = Money(random.randrange(short_platform.rect.left + 20, short_platform.rect.right - 20), short_platform.rect.top - 50)
+                money_list.add(money)
 
+                
 
-    if((player.rect.x > WALK_LIMIT_RIGHT) and (bg_move == DIRECTION_RIGHT)): 
-            bg_offset -= 1.5
-            player.control(0)
-            for block in block_list:
-                block.update()
+    for collision_platform in block_list:
 
-    print("bg offest: " + str(bg_offset))  
-    for block in block_list:
-        print("block " + str(last_sprite.rect.x))
+        if((player.rect.top <= collision_platform.rect.bottom) and (player.rect.bottom >= collision_platform.rect.bottom) and (pygame.sprite.collide_rect(player, collision_platform))):
+            if(player.is_jumping == True):
+                player.rect.top = collision_platform.rect.bottom
+                player.move_y = 0
+                player.is_jumping = False
+                player.is_falling = True
+
+        if((player.rect.bottom >= collision_platform.rect.top) and (player.rect.centery < collision_platform.rect.top - 10) and (player.rect.right > collision_platform.rect.left) and (pygame.sprite.collide_rect(player, collision_platform))):
+            if(player.is_falling):
+                player.move_y = 0
+                player.is_falling = False
+                player.rect.bottom = collision_platform.rect.top + 1
+        elif(player.is_falling == False and player.rect.bottom == collision_platform.rect.top + 1):
+            player.is_falling = True
+
+        if((collision_platform.rect.left - player.rect.right >= 1) and (collision_platform.rect.left - player.rect.right <= 2) and (player.move_x != 0) and (player.rect.bottom >= collision_platform.rect.top + 2) and (player.rect.top <= collision_platform.rect.bottom)):
+            player.rect.right = collision_platform.rect.left - 1
+            player.move_x = 0
+
+        if((player.rect.left - collision_platform.rect.right >= 1) and (player.rect.left - collision_platform.rect.right <= 2) and (player.move_x != 0) and (player.rect.bottom >= collision_platform.rect.top + 2) and (player.rect.top <= collision_platform.rect.bottom)):
+            player.rect.left = collision_platform.rect.right + 1
+            player.move_x = 0
+        
+    for collision_money in money_list:
+        if(pygame.sprite.collide_rect(player, collision_money)):
+            collision_money.kill()
+
 
     player.jump()
     player.update()
 
+
+
     all_sprites_list.draw(screen)
     block_list.draw(screen)
+    money_list.draw(screen)
     
     pygame.display.update()
     fps.tick(player_speed)
